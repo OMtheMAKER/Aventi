@@ -6,6 +6,7 @@ import string
 from app.db import engine, SessionLocal
 from app import models
 from app.auth import hash_password
+from app.seed_fixtures import import_dogfood_fixtures
 
 
 def gen_code(n=6):
@@ -75,6 +76,7 @@ def seed():
     _migrate(engine)
     db = SessionLocal()
     try:
+        import_dogfood_fixtures(db, models, hash_password)
         if db.query(models.User).first():
             # Demo events roll forward: if the seeded voting window has fully
             # closed, reopen it around "now" so the platform is always demoable

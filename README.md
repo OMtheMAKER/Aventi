@@ -308,6 +308,14 @@ All optional — everything works offline without them:
 
 ## ✅ Test suite
 
+**Official DOGFOOD acceptance checker** — committed `acceptance-report.txt` is the checker's **own output**:
+
+```bash
+python3 run.py .dogfood.toml > acceptance-report.txt   # → 7/7 PASS · "claimed T1 T2, verified T1 T2"
+```
+
+The official `fixtures.json` seeds automatically at boot (event id 9000, closed deadline), and `.dogfood.toml` maps the portal's own routes/auth for the seven checks. (The older 152-check internal suite output lives in `acceptance-report-selftests.txt`.)
+
 Five runnable acceptance suites against a fresh server before every packaging:
 
 | Suite | Checks | Covers |
