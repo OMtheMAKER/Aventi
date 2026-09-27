@@ -51,6 +51,149 @@ function EmojiPicker({ onPick, onClose }) {
   )
 }
 
+
+// ⬇️ These components MUST live at module scope. When they were declared
+// inside ChatLounge's body, every keystroke (which forces a re-render to
+// refresh the send button's disabled state) handed React a NEW component
+// identity — so React unmounted and rebuilt the whole column each keystroke,
+// destroying the composer input and throwing the cursor out. Stable module
+// identities keep the input mounted and focused.
+
+function authorIcon(m) {
+  if (m.author_role === 'organizer') return '👑'
+  if (m.author_role === 'judge') return '⚖️'
+  return GENDER_ICON[m.author_gender] || '🧑'
+}
+
+function MsgRow({ m, isMod, myId, allowedReactions, onReact, onFlag, onMod, onBan }) {
+  const badge = ROLE_BADGE[m.author_role] || ROLE_BADGE.participant
+  return (
+    <div className={`group flex gap-2.5 rounded-xl px-2.5 py-2 hover:bg-slate-800/40 ${m.removed ? 'opacity-60' : ''}`}>
+      <Bitmoji icon={authorIcon(m)} name={m.author_name} />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-sm font-bold text-white">{m.author_name}</span>
+          <span className={`rounded-full px-1.5 py-0 text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>
+          <span className="text-[10px] text-slate-500">
+            {m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+          </span>
+          <span className="invisible ml-auto flex gap-1 group-hover:visible">
+            {!m.removed && m.author_id !== myId && (
+              <button onClick={() => onFlag(m)} title="Report to moderators"
+                className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-rose-300">🚩</button>
+            )}
+            {isMod && !m.removed && (
+              <button onClick={() => onMod(m.id, 'remove')} title="Moderator delete"
+                className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-rose-300">🗑</button>
+            )}
+            {isMod && m.removed && (
+              <button onClick={() => onMod(m.id, 'restore')} title="Restore"
+                className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-emerald-300">↩️</button>
+            )}
+            {isMod && m.author_role === 'participant' && (
+              <button onClick={() => onBan({ user_id: m.author_id, name: m.author_name })} title="Mute this person"
+                className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-amber-300">🔇</button>
+            )}
+          </span>
+        </div>
+        {m.removed ? (
+          <p className="text-sm italic text-slate-500">
+            🗑 message removed by moderators{isMod && m.body ? ` — "${m.body.slice(0, 80)}${m.body.length > 80 ? '…' : ''}"` : ''}
+          </p>
+        ) : (
+          <p className="whitespace-pre-wrap break-words text-sm text-slate-200">{m.body}</p>
+        )}
+        {!m.removed && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {allowedReactions.map((e) => {
+              const count = m.reactions.buckets[e] || 0
+              const mine = m.reactions.mine[e]
+              return (
+                <button key={e} onClick={() => onReact(m.id, e)}
+                  className={`rounded-full border px-2 py-0.5 text-xs transition ${
+                    mine ? 'border-indigo-400 bg-indigo-500/25 text-white' : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                  }`}>
+                  {e}{count ? ` ${count}` : ''}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Column({
+  msgs, channel, title, icon, canPost, lockNote, muted, banReason,
+  pickerFor, setPickerFor, onPick, bodies, inputs, onType, onTrack, onSend, busy,
+  tabActive, bottomRef, isMod, myId, allowedReactions, onFlag, onMod, onBan, onReact,
+}) {
+  return (
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950"
+      onClick={() => pickerFor === channel && setPickerFor(null)}>
+      <div className={`border-b border-slate-800 px-3 py-2 text-sm font-bold ${
+        channel === 'announce' ? 'bg-amber-500/10 text-amber-300'
+        : channel === 'team' ? 'bg-emerald-500/10 text-emerald-300'
+        : 'text-slate-300'
+      }`}>
+        {icon} {title}
+        <span className="ml-2 rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">{msgs.length}</span>
+      </div>
+      <div className="min-h-72 flex-1 overflow-y-auto p-1" style={{ maxHeight: 380 }}>
+        {msgs.length === 0 ? (
+          <p className="p-6 text-center text-sm text-slate-500">
+            {channel === 'general' ? 'No messages yet — send the first one! 👋'
+             : channel === 'team' ? 'Squad zone — only your team members can read this chat.'
+             : 'No announcements yet.'}
+          </p>
+        ) : (
+          msgs.map((m) => <MsgRow key={m.id} m={m} isMod={isMod} myId={myId}
+            allowedReactions={allowedReactions} onReact={onReact} onFlag={onFlag} onMod={onMod} onBan={onBan} />)
+        )}
+        <div ref={tabActive ? bottomRef : undefined} />
+      </div>
+      <div className="relative border-t border-slate-800 p-2">
+        {canPost ? (
+          muted && channel === 'general' ? (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              🔇 You are muted{banReason ? `: ${banReason}` : ''} — reactions still work, posting doesn't.
+            </p>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); onSend(channel) }} className="flex gap-2">
+              <div className="relative">
+                <button type="button" title="Send a bitmoji / emoji"
+                  onClick={() => setPickerFor(pickerFor === channel ? null : channel)}
+                  className="h-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-base hover:border-indigo-500">
+                  😊
+                </button>
+                {pickerFor === channel && (
+                  <EmojiPicker onPick={(e) => onPick(channel, e)} onClose={() => setPickerFor(null)} />
+                )}
+              </div>
+              <input
+                defaultValue={bodies.current[channel]}
+                onChange={(e) => onType(channel, e.target.value)}
+                onClick={(e) => onTrack(channel, e.target)}
+                onKeyUp={(e) => onTrack(channel, e.target)}
+                placeholder={channel === 'general' ? 'Message the lounge…' : channel === 'team' ? 'Message your squad…' : '📢 Post an announcement…'}
+                maxLength={1200}
+                className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              />
+              <button disabled={busy || !bodies.current[channel].trim()}
+                className="rounded-lg bg-indigo-500 px-4 text-sm font-bold text-white hover:bg-indigo-400 disabled:opacity-40">
+                ➤
+              </button>
+            </form>
+          )
+        ) : (
+          <p className="px-3 py-1.5 text-center text-xs text-slate-500">{lockNote}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ChatLounge({ eventId, user }) {
   const [data, setData] = useState(null)
   const [err, setErr] = useState('')
@@ -173,134 +316,15 @@ export default function ChatLounge({ eventId, user }) {
   const teamMsgs = data.messages.filter((m) => m.channel === 'team')
   const hasTeam = !!data.my_team_id
 
-  function authorIcon(m) {
-    if (m.author_role === 'organizer') return '👑'
-    if (m.author_role === 'judge') return '⚖️'
-    return GENDER_ICON[m.author_gender] || '🧑'
-  }
-
-  function MsgRow({ m, announceCol }) {
-    const badge = ROLE_BADGE[m.author_role] || ROLE_BADGE.participant
-    return (
-      <div className={`group flex gap-2.5 rounded-xl px-2.5 py-2 hover:bg-slate-800/40 ${m.removed ? 'opacity-60' : ''}`}>
-        <Bitmoji icon={authorIcon(m)} name={m.author_name} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-sm font-bold text-white">{m.author_name}</span>
-            <span className={`rounded-full px-1.5 py-0 text-[10px] font-bold ${badge.cls}`}>{badge.label}</span>
-            <span className="text-[10px] text-slate-500">
-              {m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-            </span>
-            <span className="invisible ml-auto flex gap-1 group-hover:visible">
-              {!m.removed && m.author_id !== user?.id && (
-                <button onClick={() => { setFlagModal(m); setReason('') }} title="Report to moderators"
-                  className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-rose-300">🚩</button>
-              )}
-              {isMod && !m.removed && (
-                <button onClick={() => doMod(m.id, 'remove')} title="Moderator delete"
-                  className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-rose-300">🗑</button>
-              )}
-              {isMod && m.removed && (
-                <button onClick={() => doMod(m.id, 'restore')} title="Restore"
-                  className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-emerald-300">↩️</button>
-              )}
-              {isMod && m.author_role === 'participant' && (
-                <button onClick={() => { setBanModal({ user_id: m.author_id, name: m.author_name }); setReason('') }} title="Mute this person"
-                  className="rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:bg-slate-700 hover:text-amber-300">🔇</button>
-              )}
-            </span>
-          </div>
-          {m.removed ? (
-            <p className="text-sm italic text-slate-500">
-              🗑 message removed by moderators{isMod && m.body ? ` — "${m.body.slice(0, 80)}${m.body.length > 80 ? '…' : ''}"` : ''}
-            </p>
-          ) : (
-            <p className="whitespace-pre-wrap break-words text-sm text-slate-200">{m.body}</p>
-          )}
-          {!m.removed && (
-            <div className="mt-1 flex flex-wrap items-center gap-1">
-              {data.allowed_reactions.map((e) => {
-                const count = m.reactions.buckets[e] || 0
-                const mine = m.reactions.mine[e]
-                return (
-                  <button key={e} onClick={() => react(m.id, e)}
-                    className={`rounded-full border px-2 py-0.5 text-xs transition ${
-                      mine ? 'border-indigo-400 bg-indigo-500/25 text-white' : 'border-slate-700 text-slate-400 hover:bg-slate-800'
-                    }`}>
-                    {e}{count ? ` ${count}` : ''}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  function Column({ msgs, channel, title, icon, canPost, lockNote }) {
-    return (
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950"
-        onClick={() => pickerFor === channel && setPickerFor(null)}>
-        <div className={`border-b border-slate-800 px-3 py-2 text-sm font-bold ${
-          channel === 'announce' ? 'bg-amber-500/10 text-amber-300'
-          : channel === 'team' ? 'bg-emerald-500/10 text-emerald-300'
-          : 'text-slate-300'
-        }`}>
-          {icon} {title}
-          <span className="ml-2 rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-400">{msgs.length}</span>
-        </div>
-        <div className="min-h-72 flex-1 overflow-y-auto p-1" style={{ maxHeight: 380 }}>
-          {msgs.length === 0 ? (
-            <p className="p-6 text-center text-sm text-slate-500">
-              {channel === 'general' ? 'No messages yet — send the first one! 👋'
-               : channel === 'team' ? 'Squad zone — only your team members can read this chat.'
-               : 'No announcements yet.'}
-            </p>
-          ) : (
-            msgs.map((m) => <MsgRow key={m.id} m={m} announceCol={channel === 'announce'} />)
-          )}
-          <div ref={channel === tab ? bottomRef : undefined} />
-        </div>
-        <div className="relative border-t border-slate-800 p-2">
-          {canPost ? (
-            muted && channel === 'general' ? (
-              <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                🔇 You are muted{data.my_ban.reason ? `: ${data.my_ban.reason}` : ''} — reactions still work, posting doesn't.
-              </p>
-            ) : (
-              <form onSubmit={(e) => { e.preventDefault(); send(channel) }} className="flex gap-2">
-                <div className="relative">
-                  <button type="button" title="Send a bitmoji / emoji"
-                    onClick={() => setPickerFor(pickerFor === channel ? null : channel)}
-                    className="h-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-base hover:border-indigo-500">
-                    😊
-                  </button>
-                  {pickerFor === channel && (
-                    <EmojiPicker onPick={(e) => insertEmoji(channel, e)} onClose={() => setPickerFor(null)} />
-                  )}
-                </div>
-                <input
-                  defaultValue={bodies.current[channel]}
-                  onChange={(e) => { bodies.current[channel] = e.target.value; setTab(channel); setData((d) => ({ ...d })) }}
-                  onClick={(e) => { inputs.current[channel] = e.target; setTab(channel) }}
-                  onKeyUp={(e) => { inputs.current[channel] = e.target }}
-                  placeholder={channel === 'general' ? 'Message the lounge…' : channel === 'team' ? 'Message your squad…' : '📢 Post an announcement…'}
-                  maxLength={1200}
-                  className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-indigo-500"
-                />
-                <button disabled={busy || !bodies.current[channel].trim()}
-                  className="rounded-lg bg-indigo-500 px-4 text-sm font-bold text-white hover:bg-indigo-400 disabled:opacity-40">
-                  ➤
-                </button>
-              </form>
-            )
-          ) : (
-            <p className="px-3 py-1.5 text-center text-xs text-slate-500">{lockNote}</p>
-          )}
-        </div>
-      </div>
-    )
+  const myId = user?.id
+  const onType = (channel, value) => { bodies.current[channel] = value; setTab(channel); setData((d) => ({ ...d })) }
+  const onTrack = (channel, el) => { inputs.current[channel] = el; setTab(channel) }
+  const onFlag = (m) => { setFlagModal(m); setReason('') }
+  const onBan = (b) => { setBanModal(b); setReason('') }
+  const colProps = {
+    bodies, inputs, busy, pickerFor, setPickerFor, onPick: insertEmoji, onType, onTrack, onSend: send,
+    bottomRef, muted, banReason: data.my_ban?.reason,
+    isMod, myId, allowedReactions: data.allowed_reactions, onFlag, onMod: doMod, onBan, onReact: react,
   }
 
   const teamTitle = hasTeam
@@ -329,16 +353,18 @@ export default function ChatLounge({ eventId, user }) {
 
       <div className={`grid gap-3 ${hasTeam || isMod ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
         <div className={tab === 'general' ? '' : 'hidden lg:block'}>
-          <Column msgs={generalMsgs} channel="general" title="General" icon="💬" canPost lockNote="" />
+          <Column {...colProps} msgs={generalMsgs} channel="general" title="General" icon="💬" canPost lockNote="" tabActive={tab === 'general'} />
         </div>
         {(hasTeam || isMod) && (
           <div className={tab === 'team' ? '' : 'hidden lg:block'}>
-            <Column msgs={teamMsgs} channel="team" title={teamTitle} icon="👥" canPost={hasTeam}
+            <Column {...colProps} msgs={teamMsgs} channel="team" title={teamTitle} icon="👥" canPost={hasTeam}
+              tabActive={tab === 'team'}
               lockNote={hasTeam ? '' : '🔒 Members-only walls — organizers watch for safety, but only teammates post.'} />
           </div>
         )}
         <div className={`${tab === 'announce' ? '' : 'hidden lg:block'} ${!(hasTeam || isMod) && tab === 'team' ? 'hidden' : ''}`}>
-          <Column msgs={announceMsgs} channel="announce" title="Announcements" icon="📢"
+          <Column {...colProps} msgs={announceMsgs} channel="announce" title="Announcements" icon="📢"
+            tabActive={tab === 'announce'}
             canPost={myRole === 'organizer' || myRole === 'judge'} lockNote="🔒 Only organizers & judges post here — react away! 👇" />
         </div>
       </div>
