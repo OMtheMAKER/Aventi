@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.pyc
+*.db
+.env
+*.mp4
+*.webm
+.DS_Store
+server.log

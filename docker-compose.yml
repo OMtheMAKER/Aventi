@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # optional: real OAuth (leave unset → offline demo social login)
+      # PUBLIC_BASE_URL: "http://localhost:8000"
+      # GOOGLE_CLIENT_ID: "…"     # GOOGLE_CLIENT_SECRET: "…"
+      # DISCORD_CLIENT_ID: "…"    # DISCORD_CLIENT_SECRET: "…"
+      # GITHUB_CLIENT_ID: "…"     # GITHUB_CLIENT_SECRET: "…"
+      # optional: real email delivery for voting codes (unset → offline demo codes)
+      # SMTP_HOST: "smtp.gmail.com"      # SMTP_PORT: "587"
+      # SMTP_USER: "you@gmail.com"       # SMTP_PASSWORD: "app-password"
+      # optional: PostgreSQL instead of the built-in SQLite (unset → SQLite file in ./data)
+      # DATABASE_URL: "postgresql+psycopg://aventi:aventi@db:5432/aventi"
+      - SECRET_KEY=change-me-in-production
+    volumes:
+      - db-data:/app/data
+
+  # optional database service (uncomment together with DATABASE_URL above)
+  # db:
+  #   image: postgres:16-alpine
+  #   environment: { POSTGRES_USER: aventi, POSTGRES_PASSWORD: aventi, POSTGRES_DB: aventi }
+  #   volumes: [ "pg-data:/var/lib/postgresql/data" ]
+
+volumes:
+  db-data:
+  # pg-data:

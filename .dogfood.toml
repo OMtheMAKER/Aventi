@@ -1,0 +1,42 @@
+# Honest tier claims — rules say these MUST match what actually runs.
+[project]
+name = "Aventi Platform"
+license = "MIT"
+one_command = "docker compose up"
+offline_first = true
+
+[roles]
+# viewer  = an anonymous guest (default, no row)
+# participant = users.role = "user"
+# team_leader = users.role = "user" + teams.created_by = their id (relation, not role)
+# judge    = users.role = "judge"
+# organizer = users.role = "admin"
+roles_supported = ["viewer", "participant", "team_leader", "judge", "organizer"]
+
+[tier_1]
+claimed = true
+notes = "Dual auth portals + social demo login + role-separated registration. Events with full briefing (about/rules/rounds/judging), deadline-gated registration, team invite by code/link/email/username, open-slot team browsing, submission drafts editable up to the code-freeze, final submit locks and publishes to the public gallery. FULL submission field set: title/tagline/description/thumbnail upload/screenshot gallery (up to 6)/demo video URL/repo URL/live link/tech stack/track selection from event tracks/organizer-defined custom Q&A. Gallery: search + per-track filter + vote/comment. ROUND-WISE DELIVERABLES: one artifact slot per event round (deck/video/build), judged as a set. PER-ROUND REQUIREMENTS set by organizer — artifact kind (any/link/file), accepted file extensions, per-round deadline, ALL enforced server-side (400s) and shown on event page + participant board (chips, due-dates, deadline-passed lock). Judges see artifacts with file download links. ADMIN VIEW-AS-JUDGE: read-only replica of any judge's bench via /api/judging/preview-queue/{judge_id} (organizer-only, payload parity with judge queue)."
+
+[tier_2]
+claimed = true
+notes = "Organizer invites judges via 'judging' tab. Batch random assignment per event. Backend role isolation: /judging/score rejects any non-assigned judge with 403 — the UI hides things too, but the backend owns the rule. ORGANIZER-CONFIGURABLE WEIGHTED RUBRIC per event (2-10 named criteria, weights must sum 100 — backend-validated) with 30/30/20/20 default; every score row freezes a rubric_snapshot so results stay explainable. Per-judge z-normalization before leaderboard aggregation. CSV export at EVERY stage: registrations / submissions / raw per-criterion scores / judge progress / votes&comments / final results."
+
+[tier_3]
+claimed = true
+notes = "Community voting with CONFIGURABLE ACCESS (authenticated / email-gated with 6-digit code + Gmail alias-dot normalization / open-IP-fingerprint) and CONFIGURABLE MODE (simple one-pick cap OR QUADRATIC — n votes cost n² credits from a 9-credit budget). Results hidden from all but organizers during the window; auto-public at close or organiser early-publish. Randomized per-voter ordering on gallery ballots (stable per voter — no position bias, no refresh-jank). Anti-abuse: sliding-window rate limits on ballots/comments/verifications, duplicate-comment detection, participant self-vote blocked server-side, IP stored only as salted hash, plus an audit_log every cast/update/comment/config/publish/abuse-flag that organizers read in the UI or export as CSV. Comments with exact-dup spam block + organizer moderation ([removed] soft-delete keeps the row for audit)."
+
+[bonus]
+claimed = true
+items = ["Normalization Proof (+5) — docs/NORMALIZATION-PROOF.md", "Threat Model (+3) — docs/THREAT-MODEL.md", "API First (+3) — docs/API-FIRST.md"]
+
+[community]
+claimed = true
+notes = "Event lounge: 3 channels per event — general (all participants) · team wall (members-only; mods read for safety) · announce (organizers/judges post, everyone reads+reacts 👍❤️😂🎉🔥). Bitmoji by gender (👦/👧/🧑/🤫), organizers=👑 crown, judges=⚖️. Emoji/bitmoji picker on all composers. Per-channel rate limits (20 msg/min), report→moderation queue, soft-delete (audit-kept), mute/ban w/ reason + unban, admin lounge control tower. Endpoints under /api/chat/*. WebSocket live push at /api/chat/ws/{event_id} (poke-only; polling fallback — REST owns auth/visibility). Optional envs: DATABASE_URL (PostgreSQL-ready), SMTP_* (real email delivery of voting codes). tests/chat_test.py → 30/30. FULL CLEAN-RUN: t2 28 + t3 31 + chat 30 + t4 27 + rounds 36 = 152/152."
+
+[tier_4]
+claimed = true
+notes = "REST API for every UI action (FastAPI /docs complete) + HMAC-SIGNED OUTBOUND WEBHOOKS (8 event types, organiser-configured per event, delivery log + ping-test in UI, receiver-verifiable). CERTIFICATES: printable HTML w/ Ctrl+P→PDF, publicly verifiable /api/certificates/verify/{code} — participant, top-N winner, and SIGNED JUDGE PARTICIPATION RECORDS carrying assignment/score counts. EMBEDDABLE GALLERY WIDGET: iframe page + one-line <script> loader, no login needed, submitted projects only. BULK I/O: CSV participant import (auto-accounts + auto-teams, per-row skip reasons, idempotent re-import) + FULL-EVENT EVERYTHING.json super export beside the 7 stage-wise CSVs."
+
+[bonus]
+attempted = []
+notes = "The normalization above is the engine's normal flow, not the Normalization-Proof bonus: that requires running it on the published fixtures.json and documenting defensibility in JUDGING.md."
