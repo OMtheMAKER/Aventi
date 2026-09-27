@@ -3,7 +3,7 @@
 **Where the Future is Built** — an open-source, self-hostable **full-lifecycle hackathon platform**.
 Registration → Teams → Round-wise Deliverables → Judging → Community Voting → Results → Certificates — in **one** app, with **one** command.
 
-🌐 **Live demo (try it now):** https://aventi-dz0q.onrender.com &nbsp;·&nbsp; 🎬 **Demo video (2:50):** https://gofile.io/d/MJEa6lFW
+🌐 **Live demo (try it now):** https://aventi-dz0q.onrender.com &nbsp;·&nbsp; 🎬 **Demo video (2:50):** https://youtu.be/ZOX9ZrZ9x4E
 *(free-tier demo sleeps when idle — first load ~30s)*
 
 | | |
