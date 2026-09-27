@@ -77,7 +77,10 @@ def seed():
     db = SessionLocal()
     try:
         import_dogfood_fixtures(db, models, hash_password)
-        if db.query(models.User).first():
+        # demo fixtures are considered seeded only when the admin account exists
+        # (the DOGFOOD fixture import above must NOT mark the db as seeded,
+        #  otherwise a fresh boot would skip creating demo users/events).
+        if db.query(models.User).filter_by(email="admin@platform.dev").first():
             # Demo events roll forward: if the seeded voting window has fully
             # closed, reopen it around "now" so the platform is always demoable
             # (idempotent — a live event mid-window is left untouched).
