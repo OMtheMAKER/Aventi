@@ -1,5 +1,7 @@
 # Threat Model — hackathon-platform (+3 Bonus)
 
+> 🌐 **Live demo:** https://aventi-dz0q.onrender.com · 🎬 **Video (2:50):** https://gofile.io/d/MJEa6lFW · 📂 **Repo:** https://github.com/OMtheMAKER/Aventi · 📘 **Main docs:** README.md
+
 Scope: a self-hosted hackathon platform (FastAPI + React + SQLite) handling
 registration, teams, submissions, judging, community voting, certificates,
 webhooks, and the event chat lounge. Audience: organizers (admins), judges,

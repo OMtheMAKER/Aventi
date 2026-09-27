@@ -1,8 +1,11 @@
 # Aventi Platform — Hackathon Submission
 
 > **Tagline:** Where the Future is Built — the full hackathon lifecycle in one self-hostable app.
-> **Demo video (2:50):** https://gofile.io/d/5Qmoj1Kc
-> **Run it yourself:** `docker compose up --build` → http://localhost:8000
+> 🌐 **Try it live:** https://aventi-dz0q.onrender.com  *(free tier — sleeps when idle, first load ~30s)*
+> **Demo video (2:50):** https://gofile.io/d/MJEa6lFW
+> **Code:** https://github.com/OMtheMAKER/Aventi · **Run locally:** `docker compose up --build` → http://localhost:8000
+
+**Demo logins:** participant `alice@demo.dev` / `password123` · judge `judge@demo.dev` / `judge123` · organizer `admin@platform.dev` / `admin123`
 
 ---
 

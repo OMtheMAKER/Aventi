@@ -1,5 +1,7 @@
 # Dogfood TODO
 
+> 🌐 **Live demo:** https://aventi-dz0q.onrender.com · 🎬 **Video (2:50):** https://gofile.io/d/MJEa6lFW · 📂 **Repo:** https://github.com/OMtheMAKER/Aventi · 📘 **Main docs:** README.md
+
 ## T1 ✅ T2 ✅ T3 ✅ (delivered)
 ## T4 — built, tested, documented
 - [x] REST API surface (docs at /docs)
@@ -16,7 +18,7 @@
 - [x] event lounge chat — 2-column, react, report/mod queue, ban/unban, bitmojies
 - [x] 11 new style thumbnails added to stock stack
 - [x] acceptance-report.txt
-- [ ] demo video
+- [x] demo video
 - [ ] GitHub push (user)
 ## Round-wise deliverables + per-round requirements (26 Sep)
 - [x] Per-round artifact slots on one submission (save/upload independently; freeze-locked)

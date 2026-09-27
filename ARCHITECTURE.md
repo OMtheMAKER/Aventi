@@ -1,5 +1,7 @@
 # Architecture
 
+> 🌐 **Live demo:** https://aventi-dz0q.onrender.com · 🎬 **Video (2:50):** https://gofile.io/d/MJEa6lFW · 📂 **Repo:** https://github.com/OMtheMAKER/Aventi · 📘 **Main docs:** README.md
+
 ## Stack
 - **Backend:** Python 3 + FastAPI + SQLAlchemy, SQLite (file in `backend/data/app.db`, wipeable, self-seeding).
 - **Frontend:** React 18 + Vite + Tailwind, built with `npm run build` into `frontend/dist/`, served by FastAPI's catch-all `/` route with no-cache index.html + immutable hashed assets.

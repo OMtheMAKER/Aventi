@@ -1,5 +1,7 @@
 # API First — the platform is its REST API (+3 Bonus)
 
+> 🌐 **Live demo:** https://aventi-dz0q.onrender.com · 🎬 **Video (2:50):** https://gofile.io/d/MJEa6lFW · 📂 **Repo:** https://github.com/OMtheMAKER/Aventi · 📘 **Main docs:** README.md
+
 **Claim.** This is not a web app with an API bolted on — it's a REST API with a
 UI on top. The React frontend is just another client. Everything it does, you can
 do from curl, a script, another service, or the browser console.

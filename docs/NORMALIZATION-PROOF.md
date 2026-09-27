@@ -1,5 +1,7 @@
 # Normalization Proof — why z-score merging is fair (+5 Bonus)
 
+> 🌐 **Live demo:** https://aventi-dz0q.onrender.com · 🎬 **Video (2:50):** https://gofile.io/d/MJEa6lFW · 📂 **Repo:** https://github.com/OMtheMAKER/Aventi · 📘 **Main docs:** README.md
+
 **Claim.** When judges each score a *different subset* of submissions (the practical
 situation at any event above ~20 projects), merging raw average scores is unfair.
 Converting each judge's scores to **z-scores** before averaging makes the final
